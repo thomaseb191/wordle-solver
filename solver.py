@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-import sys
-
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 empty_freqs = {}
 word_list = []
@@ -92,6 +90,11 @@ def run():
             print(key, sortdict[key])
 
         guess = input("Guess: ")
+
+        if guess == "EXIT":
+            print("Exiting program")
+            return
+
         response = input("Reponse: ")
 
         for i in range(5):
