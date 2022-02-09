@@ -18,6 +18,9 @@ def initGame():
             allowed_list.append(word.strip())
     word_csv.close()
 
+    allowed_list.sort()
+    word_list.sort()
+
     for letter in alphabet:
         empty_freqs[letter] = 0
 
@@ -29,6 +32,9 @@ def skip_word(word, dissallowed, letters_in, not_in, solved):
             should_use = False
     for l in letters_in:
         if l not in word:
+            should_use = False
+        num_letter = letters_in.count(l)
+        if num_letter > word.count(l):
             should_use = False
     i = 0
     for l in word:
