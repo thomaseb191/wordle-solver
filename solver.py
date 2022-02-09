@@ -32,14 +32,11 @@ def skip_word(word, dissallowed, letters_in, not_in, solved):
             should_use = False
     i = 0
     for l in word:
-        if (solved[i] != "") and (l != solved[i]):
-            should_use = False
-        i += 1
-    i = 0
-    for l in word:
         if l not in alphabet:
             continue
         if l in not_in[i]:
+            should_use = False
+        if (solved[i] != "") and (l != solved[i]):
             should_use = False
         i += 1
     return should_use
@@ -96,6 +93,10 @@ def run():
             return
 
         response = input("Reponse: ")
+
+        if len(guess) != len(response):
+            print("Guess length does not match response length, please retry")
+            continue
 
         for i in range(5):
             num    = int(response[i])
