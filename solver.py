@@ -5,15 +5,46 @@ import sys
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 empty_freqs = {}
 word_list = []
+allowed_list = []
 
 def initGame():
-    word_csv = open("data/words.csv", "r")
+    word_csv = open("data/wordle_small.txt", "r")
     for word in word_csv:
         word_list.append(word.strip())
+        allowed_list.append(word.strip())
+    word_csv.close()
+
+    word_csv = open("data/wordle_large.txt", "r")
+    for word in word_csv:
+        if word not in allowed_list:
+            allowed_list.append(word.strip())
     word_csv.close()
 
     for letter in alphabet:
         empty_freqs[letter] = 0
+
+def skip_word(word, dissallowed, letters_in, not_in, solved):
+    should_use = True
+    
+    for l in dissallowed:
+        if l in word:
+            should_use = False
+    for l in letters_in:
+        if l not in word:
+            should_use = False
+    i = 0
+    for l in word:
+        if (solved[i] != "") and (l != solved[i]):
+            should_use = False
+        i += 1
+    i = 0
+    for l in word:
+        if l not in alphabet:
+            continue
+        if l in not_in[i]:
+            should_use = False
+        i += 1
+    return should_use
 
 def run():
     letters_in = ""
@@ -38,32 +69,18 @@ def run():
         letter_frequency = empty_freqs.copy()
 
         for word in word_list:
-            should_use = True
-    
-            for l in dissallowed:
-                if l in word:
-                    should_use = False
-            for l in letters_in:
-                if l not in word:
-                    should_use = False
-            i = 0
-            for l in word:
-                if (solved[i] != "") and (l != solved[i]):
-                    should_use = False
-                i += 1
-            i = 0
-            for l in word:
-                if l not in alphabet:
-                    continue
-                if l in notin[i]:
-                    should_use = False
-                i += 1
-            if not should_use:
+            if not skip_word(word, dissallowed, letters_in, notin, solved):
                 continue
             for letter in word:
                 if letter not in alphabet:
                     continue
                 letter_frequency[letter] += 1
+            #print(word)
+
+        for word in allowed_list:
+            if not skip_word(word, dissallowed, letters_in, notin, solved):
+                continue
+
             print(word)
 
         marklist = sorted(letter_frequency.items(), key=lambda x:x[1], reverse=True)
@@ -94,6 +111,7 @@ def run():
                 notin[i] += letter
             elif num == 2:
                 solved[i] = letter
+                letters_in += letter
             else:
                 raise ValueError
     print("Solved in %d guess(es)" % num_guesses)
