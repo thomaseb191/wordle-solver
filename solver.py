@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+from urllib import response
+
+
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 empty_freqs = {}
 word_list = []
@@ -24,6 +27,22 @@ def initGame():
     for letter in alphabet:
         empty_freqs[letter] = 0
 
+def gen_response(guess, answer):
+    if len(guess) != len(answer):
+        print("Guess length does not match answer length, please retry")
+        raise ValueError
+
+    response = ""
+    for i in range(len(guess)):
+        if guess[i] in answer and guess[i] == answer[i]:
+            response += "2"
+        elif guess[i] in answer and guess[i] != answer[i]:
+            response += "1"
+        elif guess[i] not in answer:
+            response += "0"
+
+    return response
+
 def skip_word(word, dissallowed, letters_in, not_in, solved):
     should_use = True
     
@@ -40,7 +59,7 @@ def skip_word(word, dissallowed, letters_in, not_in, solved):
     for l in word:
         if l not in alphabet:
             continue
-        if l in not_in[i]:
+        if (l in not_in[i]) and (l != solved[i]):
             should_use = False
         if (solved[i] != "") and (l != solved[i]):
             should_use = False
@@ -117,13 +136,18 @@ def run():
                 else:
                     dissallowed += letter
             elif num == 1:
-                letters_in += letter
+                if letter not in letters_in:
+                    letters_in += letter
                 notin[i] += letter
             elif num == 2:
                 solved[i] = letter
-                letters_in += letter
+                if letter not in letters_in:
+                    letters_in += letter
             else:
                 raise ValueError
+        
+        print(letters_in, dissallowed, notin, solved)
+
     print("Solved in %d guess(es)" % num_guesses)
             
 
