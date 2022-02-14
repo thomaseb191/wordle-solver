@@ -5,17 +5,38 @@ class Solver:
     word_list = []
     allowed_list = []
 
+    allowed_letters = []
+
+    def parseWord(word):
+        i = 0
+        for l in word:
+            if l not in Solver.allowed_letters[i]:
+                Solver.allowed_letters[i] += l
+            i += 1
+
     def initGame():
         word_csv = open("data/wordle_small.txt", "r")
+
+        first = word_csv.readline().strip()
+
+        i = 0
+        for l in first:
+            Solver.allowed_letters.insert(i, l)
+            i += 1
+
+        Solver.word_list.append(first)
+        Solver.allowed_list.append(first)
         for word in word_csv:
             Solver.word_list.append(word.strip())
             Solver.allowed_list.append(word.strip())
+            Solver.parseWord(word.strip())
         word_csv.close()
 
         word_csv = open("data/wordle_large.txt", "r")
         for word in word_csv:
             if word not in Solver.allowed_list:
                 Solver.allowed_list.append(word.strip())
+                Solver.parseWord(word.strip())
         word_csv.close()
 
         Solver.allowed_list.sort()
@@ -40,42 +61,23 @@ class Solver:
 
         return response
 
-    def skip_word(word, dissallowed, letters_in, not_in, solved):
-        should_use = True
-        
-        for l in dissallowed:
-            if l in word:
-                should_use = False
-        for l in letters_in:
-            if l not in word:
-                should_use = False
-            num_letter = letters_in.count(l)
-            if num_letter > word.count(l):
-                should_use = False
+    def skip_word(word, contained):        
         i = 0
+        for l in contained:
+            if contained.count(l) > word.count(l):
+                return False
+
         for l in word:
             if l not in Solver.alphabet:
                 continue
-            if (l in not_in[i]) and (l != solved[i]):
-                should_use = False
-            if (solved[i] != "") and (l != solved[i]):
-                should_use = False
+            if l not in Solver.allowed_letters[i]:
+                return False
             i += 1
-        return should_use
+        return True
 
     def run():
-        letters_in = ""
+        contained = ""
 
-        dissallowed = ""
-
-        notin = [   "",
-                "",
-                "",
-                "",
-                ""
-        ]
-
-        solved = ["", "" , "", "", ""]
 
         response = "00000"
 
@@ -86,19 +88,22 @@ class Solver:
             letter_frequency = Solver.empty_freqs.copy()
 
             for word in Solver.word_list:
-                if not Solver.skip_word(word, dissallowed, letters_in, notin, solved):
+                if not Solver.skip_word(word, contained):
                     continue
                 for letter in word:
                     if letter not in Solver.alphabet:
                         continue
                     letter_frequency[letter] += 1
-                #print(word)
+                print(word)
 
             for word in Solver.allowed_list:
-                if not Solver.skip_word(word, dissallowed, letters_in, notin, solved):
+                if not Solver.skip_word(word, contained):
                     continue
-
-                print(word)
+                #for letter in word:
+                #    if letter not in Solver.alphabet:
+                #        continue
+                #    letter_frequency[letter] += 1
+                #print(word)
 
             marklist = sorted(letter_frequency.items(), key=lambda x:x[1], reverse=True)
             sortdict = dict(marklist)
@@ -114,36 +119,34 @@ class Solver:
                 print("Exiting program")
                 return
 
-            response = input("Reponse: ")
+            response = input("Response: ")
 
             if len(guess) != len(response):
                 print("Guess length does not match response length, please retry")
                 continue
 
+            solved_letters = ""
+
             for i in range(5):
                 num    = int(response[i])
                 letter = guess[i]
                 if num == 0:
-                    if letter in letters_in:
-                        skip = [index for index in range(len(solved)) if solved[index] == letter]
-                        for j in range(5):
-                            if j in skip:
-                                continue
-                            notin[j] += letter
-                    else:
-                        dissallowed += letter
+                    if len(Solver.allowed_letters[i]) != 1:
+                        Solver.allowed_letters[i] = Solver.allowed_letters[i].replace(letter, '')
                 elif num == 1:
-                    if letter not in letters_in:
-                        letters_in += letter
-                    notin[i] += letter
+                    Solver.allowed_letters[i] = Solver.allowed_letters[i].replace(letter, '')
+                    contained = contained.replace(letter, '')
+                    solved_letters += letter
                 elif num == 2:
-                    solved[i] = letter
-                    if letter not in letters_in:
-                        letters_in += letter
+                    solved_letters += letter
+                    contained = contained.replace(letter, '')
+                    Solver.allowed_letters[i] = letter
                 else:
                     raise ValueError
             
-            print(letters_in, dissallowed, notin, solved)
+            contained += solved_letters
+            
+            print(Solver.allowed_letters, contained)
 
         print("Solved in %d guess(es)" % num_guesses)
             
