@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+from urllib import response
+
+
 class Solver:
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     empty_freqs = {}
@@ -45,20 +48,34 @@ class Solver:
         for letter in Solver.alphabet:
             Solver.empty_freqs[letter] = 0
 
-    def gen_response(guess, answer):
-        if len(guess) != len(answer):
+    def gen_response(guess, solution):
+        if len(guess) != len(solution):
             print("Guess length does not match answer length, please retry")
             raise ValueError
+        
+        if guess == solution:
+            return "22222"
 
-        response = ""
-        for i in range(len(guess)):
-            if guess[i] in answer and guess[i] == answer[i]:
-                response += "2"
-            elif guess[i] in answer and guess[i] != answer[i]:
-                response += "1"
-            elif guess[i] not in answer:
-                response += "0"
+        #Code snagged from here:
+        # https://mathspp.com/blog/solving-wordle-with-python
+        pool = {}
+        for g, s in zip(guess, solution):
+            if g == s:
+                continue
+            if s in pool:
+                pool[s] += 1
+            else: 
+                pool[s] = 1
 
+        response = []
+        for guess_letter, solution_letter in zip(guess, solution):
+            if guess_letter == solution_letter:
+                response += 2
+            elif guess_letter in solution and guess_letter in pool and pool[guess_letter] > 0:
+                response += 1
+                pool[guess_letter] -= 1
+            else:
+                response += 0
         return response
 
     def skip_word(word, contained):        
@@ -131,8 +148,9 @@ class Solver:
                 num    = int(response[i])
                 letter = guess[i]
                 if num == 0:
-                    if len(Solver.allowed_letters[i]) != 1:
-                        Solver.allowed_letters[i] = Solver.allowed_letters[i].replace(letter, '')
+                    for x in range(len(Solver.allowed_letters)):
+                        if len(Solver.allowed_letters[x]) != 1:
+                            Solver.allowed_letters[x] = Solver.allowed_letters[x].replace(letter, '')
                 elif num == 1:
                     Solver.allowed_letters[i] = Solver.allowed_letters[i].replace(letter, '')
                     contained = contained.replace(letter, '')
@@ -149,11 +167,3 @@ class Solver:
             print(Solver.allowed_letters, contained)
 
         print("Solved in %d guess(es)" % num_guesses)
-            
-
-def main():
-    initGame()
-    run()
-
-if __name__ == "__main__":
-    main()
